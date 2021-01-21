@@ -62,6 +62,10 @@ func (b *LesApiBackend) IsSyncing() bool {
 	return false
 }
 
+func (b *LesApiBackend) IngestTransactions([]*types.Transaction) error {
+	panic("not implemented")
+}
+
 func (b *LesApiBackend) GetLatestEth1Data() (common.Hash, uint64) {
 	return common.Hash{}, 0
 }

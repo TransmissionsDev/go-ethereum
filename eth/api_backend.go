@@ -142,6 +142,16 @@ func (b *EthAPIBackend) SetL1Head(number uint64) error {
 	return b.eth.syncService.SetL1Head(number)
 }
 
+func (b *EthAPIBackend) IngestTransactions(txs []*types.Transaction) error {
+	for _, tx := range txs {
+		err := b.eth.syncService.ApplyTransaction(tx)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (b *EthAPIBackend) HeaderByNumber(ctx context.Context, number rpc.BlockNumber) (*types.Header, error) {
 	// Pending block is only known by the miner
 	if number == rpc.PendingBlockNumber {

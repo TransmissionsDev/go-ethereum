@@ -94,7 +94,7 @@ type Backend interface {
 	GetLatestL1Timestamp() uint64
 	SetL1Head(number uint64) error
 	GasLimit() uint64
-
+	IngestTransactions([]*types.Transaction) error
 	ChainConfig() *params.ChainConfig
 	CurrentBlock() *types.Block
 
