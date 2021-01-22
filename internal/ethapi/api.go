@@ -1989,7 +1989,7 @@ func (api *PrivateDebugAPI) IngestTransactions(txs []*RPCTransaction) error {
 		case "EIP155":
 			sighashType = types.SighashEIP155
 		default:
-			return fmt.Errorf("Transaction with unknown sighash type: %s", sighashType)
+			return fmt.Errorf("Transaction with unknown sighash type: %d", sighashType)
 		}
 
 		var queueOrigin types.QueueOrigin
@@ -1999,7 +1999,7 @@ func (api *PrivateDebugAPI) IngestTransactions(txs []*RPCTransaction) error {
 		case "l1":
 			queueOrigin = types.QueueOriginL1ToL2
 		default:
-			return fmt.Errorf("Transaction with unknown queue origin: %s", queueOrigin)
+			return fmt.Errorf("Transaction with unknown queue origin: %d", queueOrigin)
 		}
 
 		transaction := types.NewTransaction(nonce, *tx.To, value, gasLimit, gasPrice, data, tx.L1TxOrigin, l1BlockNumber, queueOrigin, sighashType)
