@@ -30,6 +30,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rollup/dump"
+	"github.com/pborman/uuid"
 )
 
 // emptyCodeHash is used by create to ensure deployment is disallowed to already
@@ -60,11 +61,11 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 				abi := &(account.ABI)
 				method, err := abi.MethodById(input)
 				if err != nil {
-					log.Debug("Calling Known Contract", "Name", name, "Message", err)
+					log.Debug("Calling Known Contract", "Execution ID", evm.Id.String(), "Name", name, "Message", err)
 				} else {
-					log.Debug("Calling Known Contract", "Name", name, "Method", method.RawName)
+					log.Debug("Calling Known Contract", "Execution ID", evm.Id.String(), "Name", name, "Method", method.RawName)
 					if method.RawName == "ovmREVERT" {
-						log.Debug("Contract Threw Exception", "asciified", string(input))
+						log.Debug("Contract Threw Exception", "Execution ID", evm.Id.String(), "asciified", string(input))
 					}
 				}
 			}
@@ -72,7 +73,7 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 
 		// We don't know the contract, so print some generic information.
 		if isUnknown {
-			log.Debug("Calling Unknown Contract", "Address", contract.Address().Hex())
+			log.Debug("Calling Unknown Contract", "Execution ID", evm.Id.String(), "Address", contract.Address().Hex())
 		}
 
 		// Uncomment to make Safety checker always returns true.
@@ -84,7 +85,7 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 		if contract.Address() == evm.Context.OvmStateManager.Address {
 			// The caller must be the execution manager
 			if contract.Caller() != evm.Context.OvmExecutionManager.Address {
-				log.Error("StateManager called by non ExecutionManager", "caller", contract.Caller().Hex())
+				log.Error("StateManager called by non ExecutionManager", "Execution ID", evm.Id.String(), "caller", contract.Caller().Hex())
 				return nil, ErrOvmSandboxEscape
 			}
 			return callStateManager(input, evm, contract)
@@ -189,6 +190,8 @@ type EVM struct {
 	// available gas is calculated in gasCall* according to the 63/64 rule and later
 	// applied in opCall*.
 	callGasTemp uint64
+
+	Id uuid.UUID
 }
 
 // NewEVM returns a new EVM. The returned EVM is not thread safe and should
@@ -209,6 +212,8 @@ func NewEVM(ctx Context, statedb StateDB, chainConfig *params.ChainConfig, vmCon
 		chainConfig:  chainConfig,
 		chainRules:   chainConfig.Rules(ctx.BlockNumber),
 		interpreters: make([]Interpreter, 0, 1),
+
+		Id: uuid.NewRandom(),
 	}
 
 	if chainConfig.IsEWASM(ctx.BlockNumber) {
@@ -413,7 +418,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 				ret = common.FromHex("0x")
 			}
 
-			log.Debug("Reached the end of an OVM execution", "Return Data", hexutil.Encode(ret), "Error", err)
+			log.Debug("Reached the end of an OVM execution", "Execution ID", evm.Id.String(), "Return Data", hexutil.Encode(ret), "Error", err)
 		}
 	}
 
